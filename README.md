@@ -2,9 +2,9 @@
 
 An online genome browser built on [igv.js](https://github.com/igvteam/igv.js), supporting the mouse (mm10) and human (hg38) reference genomes. The whole tool is a single self-contained HTML file — no install, no server. Just open it in a browser.
 
-Live demo: https://hengbingao.github.io/Best_browser/browser/genome_browser_cn.html
+Live demo: https://hengbingao.github.io/Best_browser/browser/genome_browser_en.html
 
-## Repository structure
+## Repository structuree
 
 ```
 Best_browser/
