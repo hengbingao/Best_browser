@@ -1,34 +1,34 @@
 # Best-Browser
 
-一个基于 [igv.js](https://github.com/igvteam/igv.js) 的在线基因组浏览器，支持小鼠 mm10 和人类 hg38 两个参考基因组。整个工具就是一个独立的 HTML 文件，不需要安装、不需要服务器，双击（或用浏览器打开）就能用。
+An online genome browser built on [igv.js](https://github.com/igvteam/igv.js), supporting the mouse (mm10) and human (hg38) reference genomes. The whole tool is a single self-contained HTML file — no install, no server. Just open it in a browser.
 
-在线体验：https://hengbingao.github.io/Best_browser/browser/genome_browser_cn.html
+Live demo: https://hengbingao.github.io/Best_browser/browser/genome_browser_cn.html
 
-## 目录结构
+## Repository structure
 
 ```
 Best_browser/
 ├── README.md
 └── browser/
-    ├── genome_browser_cn.html   # 中文版
-    └── genome_browser_en.html   # 英文版
+    ├── genome_browser_cn.html   # Chinese UI
+    └── genome_browser_en.html   # English UI
 ```
 
-两个文件功能完全一样，只是界面语言不同，用哪个都可以，各自独立、不需要额外依赖。
+Both files have identical functionality — only the UI language differs. Either one works standalone with no extra dependencies.
 
-## 功能
+## Features
 
-- 内置 mm10（小鼠）/ hg38（人类）参考基因组，页面顶部下拉切换
-- 内置 RefSeq 基因注释轨道，同一个基因只保留最长的转录本，不会看到一堆重复条目
-- 支持基因名或坐标（如 `chr1:3,000,000-3,700,000`）搜索跳转
-- 支持加载本地文件 / 整个文件夹里的轨道（bigWig、bed、vcf 等），也支持粘贴 URL 直接加载在线轨道
-- 轨道可以批量设置高度、颜色，可以做 Group scale / Auto scale
-- 支持把当前的基因组、坐标、所有轨道配置保存成一个 Session（json），下次选中对应文件夹即可一键还原（只有一个 Session 文件时自动加载，多个的话会弹窗让你选）
+- Built-in mm10 (mouse) / hg38 (human) reference genomes, switchable from a dropdown at the top of the page
+- Built-in RefSeq gene annotation track that keeps only the longest transcript per gene, so you won't see a pile of duplicate entries
+- Search and jump by gene name or coordinates (e.g. `chr1:3,000,000-3,700,000`)
+- Load local files or an entire local folder of tracks (bigWig, bed, vcf, etc.), or paste a URL to load a track directly from the web
+- Batch-set track height and color, plus Group scale / Auto scale
+- Save the current genome, locus, and all track settings as a Session (JSON); next time, just pick that folder to restore it in one click (auto-restores if there's exactly one Session file, or lets you pick when there are several)
 
-## 使用方法
+## Usage
 
-1. 打开 `browser/genome_browser_cn.html`（或英文版 `genome_browser_en.html`）
-2. 顶部选择参考基因组（mm10 / hg38）
-3. 在“跳转 / 搜索”里输入基因名或坐标，点 Go
-4. 需要加载自己的数据：点“选择本地文件”或“选择文件夹加载”，也可以粘贴轨道的 URL
-5. 调整好轨道顺序、颜色、高度后，可以点“保存 Session”导出配置，下次用“加载 Session”一键还原
+1. Open `browser/genome_browser_en.html` (or the Chinese version `genome_browser_cn.html`)
+2. Choose a reference genome (mm10 / hg38) at the top
+3. Type a gene name or coordinates into the search box and click Go
+4. To load your own data: click "Choose local file" or "Choose folder to load", or paste a track URL
+5. Once tracks are arranged with the order, color, and height you want, click "Save Session" to export the config, and "Load Session" next time to restore it in one click
