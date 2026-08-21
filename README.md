@@ -1,4 +1,4 @@
-# Best-Browser
+# EpiBrowser
 
 An online genome browser built on [igv.js](https://github.com/igvteam/igv.js), supporting the mouse (mm10) and human (hg38) reference genomes. The whole tool is a single self-contained HTML file — no install, no server. Just open it in a browser.
 
@@ -32,3 +32,4 @@ Both files have identical functionality — only the UI language differs. Either
 3. Type a gene name or coordinates into the search box and click Go
 4. To load your own data: click "Choose local file" or "Choose folder to load", or paste a track URL
 5. Once tracks are arranged with the order, color, and height you want, click "Save Session" to export the config, and "Load Session" next time to restore it in one click
+To refresh the web app, use Ctrl+F5
