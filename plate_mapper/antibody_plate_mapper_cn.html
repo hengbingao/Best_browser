@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antibody Plate Mapper</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+</head>
+<body>
+<style>
+  :root {
+    --bg: #F3F5F6;
+    --surface: #FFFFFF;
+    --surface-2: #EAEFF1;
+    --border: #D7DEE1;
+    --text: #16232A;
+    --text-muted: #5B6B72;
+    --accent: #0E7C86;
+    --accent-strong: #075B63;
+    --accent-soft: #DCEEF0;
+    --warn: #C97A2B;
+    --warn-soft: #F5E3CC;
+    --danger: #C2453A;
+    --shadow: 0 1px 2px rgba(22,35,42,0.06), 0 4px 14px rgba(22,35,42,0.06);
+    --font-sans: 'IBM Plex Sans', 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E1518;
+      --surface: #141C20;
+      --surface-2: #1B2529;
+      --border: #2A363B;
+      --text: #E7EEF0;
+      --text-muted: #93A3A9;
+      --accent: #29B6C2;
+      --accent-strong: #6FE0E8;
+      --accent-soft: #163338;
+      --warn: #E0A458;
+      --warn-soft: #3A2C18;
+      --danger: #E17A70;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 18px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E1518;
+    --surface: #141C20;
+    --surface-2: #1B2529;
+    --border: #2A363B;
+    --text: #E7EEF0;
+    --text-muted: #93A3A9;
+    --accent: #29B6C2;
+    --accent-strong: #6FE0E8;
+    --accent-soft: #163338;
+    --warn: #E0A458;
+    --warn-soft: #3A2C18;
+    --danger: #E17A70;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 18px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-sans); }
+
+  .app { max-width: 1320px; margin: 0 auto; padding: 20px 20px 64px; display: flex; flex-direction: column; gap: 14px; }
+
+  .topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { font-size: 22px; line-height: 1; }
+  .brand h1 { font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.01em; }
+  .brand p.sub { margin: 2px 0 0; font-size: 12px; color: var(--text-muted); }
+  .topbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+  select, input[type="text"], textarea {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 10px;
+  }
+  input[type="text"]::placeholder, textarea::placeholder { color: var(--text-muted); font-family: var(--font-sans); }
+  select:focus-visible, input:focus-visible, textarea:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+
+  button { font-family: var(--font-sans); cursor: pointer; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 7px 12px; font-size: 13px; font-weight: 500; transition: background .12s ease, border-color .12s ease, color .12s ease; }
+  button:hover { border-color: var(--accent); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #ffffff; font-weight: 600; }
+  .btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+  .btn-secondary { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); font-weight: 600; }
+  .btn-mini { padding: 5px 9px; font-size: 12px; }
+  .btn-mini-ghost { background: transparent; color: var(--text-muted); }
+  .btn-danger-armed { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+  .order-field { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+
+  .howto { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px 16px; font-size: 13px; box-shadow: var(--shadow); }
+  .howto summary { cursor: pointer; padding: 10px 0; font-weight: 600; color: var(--accent-strong); }
+  .howto ol { margin: 0 0 8px; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--text); }
+  .howto p.note { color: var(--text-muted); font-size: 12px; margin: 0 0 12px; }
+
+  .statusline { font-size: 12.5px; color: var(--text-muted); padding: 0 4px; }
+
+  .main { display: flex; gap: 16px; align-items: flex-start; }
+  .plate-panel { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+  .side-panel { flex: 0 0 300px; display: flex; flex-direction: column; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; }
+
+  @media (max-width: 920px) {
+    .main { flex-direction: column; }
+    .side-panel { flex: 1 1 auto; width: 100%; position: static; max-height: none; }
+  }
+
+  .plate-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .plate-tab { border-radius: 999px; padding: 6px 16px; font-size: 13px; }
+  .plate-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+  .plate-settings { display: flex; flex-direction: column; gap: 4px; }
+  .settings-field { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-muted); }
+  .settings-field span { flex: 0 0 auto; }
+  .settings-field input { flex: 1 1 auto; max-width: 260px; }
+  .settings-hint { font-size: 12px; color: var(--text-muted); margin: 2px 0 0; }
+  .settings-hint code { font-family: var(--font-mono); background: var(--surface-2); padding: 1px 6px; border-radius: 5px; color: var(--accent-strong); }
+
+  .grid-scroll { overflow-x: auto; padding-bottom: 4px; }
+  .plate-grid { display: grid; grid-template-columns: 38px repeat(12, minmax(58px, 1fr)); gap: 5px; min-width: 780px; }
+  .grid-corner { background: transparent; }
+  .grid-head { background: transparent; border: none; color: var(--text-muted); font-size: 11.5px; font-weight: 600; font-family: var(--font-mono); border-radius: 6px; padding: 4px 0; }
+  .grid-head:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: transparent; }
+  .row-head { display: flex; align-items: center; justify-content: center; }
+
+  .well {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    cursor: pointer; user-select: none; padding: 2px;
+    --well-color: var(--text-muted);
+  }
+  .well .well-coord { position: absolute; top: 2px; left: 4px; font-size: 8.5px; font-family: var(--font-mono); color: var(--text-muted); opacity: .75; }
+  .well .well-label { font-size: 9.5px; font-weight: 600; color: var(--well-color); max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 6px; }
+  .well .well-barcode { font-size: 8.5px; font-family: var(--font-mono); color: var(--text-muted); max-width: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .well.has-antibody { background: color-mix(in srgb, var(--well-color) 20%, var(--surface)); border-color: color-mix(in srgb, var(--well-color) 55%, var(--border)); }
+  .well.partial { border-style: dashed; }
+  .well.partial::after { content: ""; position: absolute; top: 3px; right: 4px; width: 5px; height: 5px; border-radius: 50%; background: var(--warn); }
+  .well.complete { border-width: 2px; }
+  .well.selected { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .well:hover { border-color: var(--accent); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; padding-top: 6px; border-top: 1px dashed var(--border); }
+  .legend-empty { font-size: 12.5px; color: var(--text-muted); margin: 4px 0 0; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+  .swatch { width: 10px; height: 10px; border-radius: 3px; background: var(--well-color); flex: 0 0 auto; }
+  .legend-count { font-family: var(--font-mono); color: var(--text); }
+
+  .panel-section-title { font-size: 12.5px; font-weight: 700; color: var(--accent-strong); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+  .panel-hint, .panel-note { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+  .field-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .field-row label { font-size: 12px; color: var(--text-muted); }
+  .field-controls { display: flex; gap: 6px; }
+  .field-controls input { flex: 1 1 auto; min-width: 0; }
+  .paste-section { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 8px; }
+  .paste-section textarea { width: 100%; resize: vertical; font-family: var(--font-mono); font-size: 12px; }
+  .paste-section select { width: 100%; }
+
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 12px); background: var(--text); color: var(--bg); font-size: 13px; padding: 9px 16px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; box-shadow: var(--shadow); z-index: 50; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast-warn { background: var(--warn); color: #1a1200; }
+  .toast-ok { background: var(--accent-strong); color: #fff; }
+</style>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">🧫</span>
+      <div>
+        <h1>Antibody Plate Mapper</h1>
+        <p class="sub">4 × 96孔板 批量配对 → 导出 antibody_map.xlsx</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <label class="order-field">
+        编号顺序
+        <select id="orderSelect">
+          <option value="row">先行后列 (A1→A12→B1…)</option>
+          <option value="col">先列后行 (A1→H1→A2…)</option>
+        </select>
+      </label>
+      <button type="button" id="btnClearPlate">清空当前板</button>
+      <button type="button" id="btnClearAll">清空全部</button>
+      <button type="button" id="btnExport" class="btn-primary">生成并下载 antibody_map.xlsx</button>
+    </div>
+  </header>
+
+  <details class="howto">
+    <summary>使用说明（点击展开/收起）</summary>
+    <ol>
+      <li>右上角选好「编号顺序」（决定Well_name自动编号的方式），一般全程只设置一次。</li>
+      <li>切换到要填写的孔板（Plate 1-4），如需要可以修改这块板的 Well_name 前缀。</li>
+      <li>在孔板上点击或拖拽框选一批孔；也可以点击行号 A-H / 列号 1-12 整行整列选中；按住 Ctrl/Cmd 点击可以加选不连续的孔。</li>
+      <li>在右侧面板填写 Tn5 modality barcode / nanobody_Tn5 / Histone_marker，点「应用」批量写入选中的孔；也可以直接从Excel复制一整列，粘贴到「批量粘贴」框里，按孔位顺序自动依次填入。</li>
+      <li>四块板都填完后，点右上角「生成并下载 antibody_map.xlsx」——只有四个字段（barcode / well name / nanobody / histone）都填写完整的孔，才会被导出成一行。</li>
+    </ol>
+    <p class="note">填写内容会自动保存在这台设备的这个浏览器里，刷新页面不会丢失；换一台设备或换一个浏览器打开则看不到，请以最终导出的 xlsx 文件为准。</p>
+  </details>
+
+  <div class="statusline" id="statusline"></div>
+
+  <div class="main">
+    <div class="plate-panel">
+      <div class="plate-tabs" id="plateTabs"></div>
+      <div class="plate-settings" id="plateSettings"></div>
+      <div class="grid-scroll">
+        <div class="plate-grid" id="plateGrid"></div>
+      </div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <aside class="side-panel" id="sidePanel"></aside>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var ROWS = ['A','B','C','D','E','F','G','H'];
+  var COLS = [1,2,3,4,5,6,7,8,9,10,11,12];
+  var STORAGE_KEY = 'antibody-plate-mapper-v1';
+  var PALETTE = ['#4C72B0','#DD8452','#55A868','#C44E52','#8172B2','#937860','#DA8BC3','#8C8C8C','#CCB974','#64B5CD','#B0725C','#5DA5A0'];
+
+  function emptyWell() { return { barcode: '', wellName: '', nanobody: '', histone: '' }; }
+
+  function makePlate(id) {
+    var wells = {};
+    ROWS.forEach(function (r) { COLS.forEach(function (c) { wells[r + c] = emptyWell(); }); });
+    return { id: id, prefix: 'iTn5_N5_5base', wells: wells };
+  }
+
+  var state = {
+    order: 'row',
+    activePlate: 1,
+    plates: [1, 2, 3, 4].map(makePlate)
+  };
+  var selection = new Set();
+  var lastAnchor = null;
+  var isDragging = false;
+
+  // ---------- persistence ----------
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        order: state.order, activePlate: state.activePlate, plates: state.plates
+      }));
+    } catch (e) { /* best-effort only */ }
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.plates) || parsed.plates.length !== 4) return null;
+      for (var i = 0; i < parsed.plates.length; i++) {
+        var p = parsed.plates[i];
+        if (!p || typeof p.id !== 'number' || typeof p.wells !== 'object') return null;
+      }
+      return parsed;
+    } catch (e) { return null; }
+  }
+
+  function restoreFromLoaded(loaded) {
+    state.order = loaded.order === 'col' ? 'col' : 'row';
+    state.activePlate = [1, 2, 3, 4].indexOf(loaded.activePlate) >= 0 ? loaded.activePlate : 1;
+    state.plates = [1, 2, 3, 4].map(function (id) {
+      var fresh = makePlate(id);
+      var lp = null;
+      for (var i = 0; i < loaded.plates.length; i++) { if (loaded.plates[i].id === id) { lp = loaded.plates[i]; break; } }
+      if (!lp) return fresh;
+      if (typeof lp.prefix === 'string' && lp.prefix.trim()) fresh.prefix = lp.prefix;
+      ROWS.forEach(function (r) {
+        COLS.forEach(function (c) {
+          var key = r + c;
+          var w = lp.wells ? lp.wells[key] : null;
+          if (w) {
+            fresh.wells[key] = {
+              barcode: typeof w.barcode === 'string' ? w.barcode : '',
+              wellName: typeof w.wellName === 'string' ? w.wellName : '',
+              nanobody: typeof w.nanobody === 'string' ? w.nanobody : '',
+              histone: typeof w.histone === 'string' ? w.histone : ''
+            };
+          }
+        });
+      });
+      return fresh;
+    });
+  }
+
+  // ---------- helpers ----------
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function getActivePlate() {
+    for (var i = 0; i < state.plates.length; i++) { if (state.plates[i].id === state.activePlate) return state.plates[i]; }
+    return state.plates[0];
+  }
+
+  function wellIndex(ri, ci, order) {
+    return order === 'col' ? (ci * 8 + ri + 1) : (ri * 12 + ci + 1);
+  }
+
+  function orderedKeys(order) {
+    var arr = [];
+    ROWS.forEach(function (r, ri) { COLS.forEach(function (c, ci) { arr.push({ key: r + c, idx: wellIndex(ri, ci, order) }); }); });
+    arr.sort(function (a, b) { return a.idx - b.idx; });
+    return arr.map(function (x) { return x.key; });
+  }
+
+  function computedWellName(plate, ri, ci) {
+    var key = ROWS[ri] + COLS[ci];
+    var w = plate.wells[key];
+    if (w.wellName && w.wellName.trim()) return w.wellName.trim();
+    return plate.prefix + '_' + plate.id + '_' + wellIndex(ri, ci, state.order);
+  }
+
+  function wellRC(key) {
+    var r = ROWS.indexOf(key.charAt(0));
+    var c = parseInt(key.slice(1), 10) - 1;
+    return { r: r, c: c };
+  }
+
+  function rectSelection(a, b) {
+    var ra = wellRC(a), rb = wellRC(b);
+    var r0 = Math.min(ra.r, rb.r), r1 = Math.max(ra.r, rb.r);
+    var c0 = Math.min(ra.c, rb.c), c1 = Math.max(ra.c, rb.c);
+    var sel = new Set();
+    for (var r = r0; r <= r1; r++) for (var c = c0; c <= c1; c++) sel.add(ROWS[r] + COLS[c]);
+    return sel;
+  }
+
+  function collectGroups() {
+    var map = new Map();
+    var colorIdx = 0;
+    state.plates.forEach(function (plate) {
+      ROWS.forEach(function (r) {
+        COLS.forEach(function (c) {
+          var w = plate.wells[r + c];
+          var nb = w.nanobody.trim(), hs = w.histone.trim();
+          if (!nb && !hs) return;
+          var comboKey = nb + '␟' + hs;
+          if (!map.has(comboKey)) {
+            map.set(comboKey, { label: (nb || '(未命名)') + ' / ' + (hs || '(未命名)'), color: PALETTE[colorIdx % PALETTE.length], count: 0 });
+            colorIdx++;
+          }
+          map.get(comboKey).count++;
+        });
+      });
+    });
+    return map;
+  }
+
+  function commonValue(field) {
+    var plate = getActivePlate();
+    var val, first = true;
+    var mixed = false;
+    selection.forEach(function (key) {
+      var v = plate.wells[key][field] || '';
+      if (first) { val = v; first = false; } else if (v !== val) { mixed = true; }
+    });
+    if (first) return '';
+    return mixed ? undefined : val;
+  }
+
+  // ---------- toast ----------
+  var toastTimer = null;
+  function showToast(msg, kind) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (kind ? ' toast-' + kind : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 3200);
+  }
+
+  // ---------- rendering ----------
+  var tabsEl = document.getElementById('plateTabs');
+  var settingsEl = document.getElementById('plateSettings');
+  var gridEl = document.getElementById('plateGrid');
+  var legendEl = document.getElementById('legend');
+  var sidePanelEl = document.getElementById('sidePanel');
+  var statuslineEl = document.getElementById('statusline');
+
+  function renderTabs() {
+    var html = '';
+    state.plates.forEach(function (p) {
+      html += '<button type="button" class="plate-tab' + (p.id === state.activePlate ? ' active' : '') + '" data-plate="' + p.id + '">Plate ' + p.id + '</button>';
+    });
+    tabsEl.innerHTML = html;
+  }
+
+  function renderSettings() {
+    var plate = getActivePlate();
+    var example = computedWellName(plate, 0, 0);
+    settingsEl.innerHTML =
+      '<label class="settings-field"><span>Well_name 前缀</span><input type="text" id="prefixInput" value="' + esc(plate.prefix) + '" /></label>' +
+      '<p class="settings-hint">示例(A1)：<code>' + esc(example) + '</code> —— 格式为 前缀_板号_孔序号(1-96)；单个孔可在右侧面板单独覆盖名字。</p>';
+  }
+
+  function renderGrid() {
+    var plate = getActivePlate();
+    var groups = collectGroups();
+    var html = '<div class="grid-corner"></div>';
+    COLS.forEach(function (c) { html += '<button type="button" class="grid-head col-head" data-col="' + c + '">' + c + '</button>'; });
+    ROWS.forEach(function (r, ri) {
+      html += '<button type="button" class="grid-head row-head" data-row="' + r + '">' + r + '</button>';
+      COLS.forEach(function (c, ci) {
+        var key = r + c;
+        var w = plate.wells[key];
+        var bc = w.barcode.trim(), nb = w.nanobody.trim(), hs = w.histone.trim();
+        var hasAb = !!(nb || hs);
+        var complete = !!(bc && nb && hs);
+        var cls = 'well';
+        var style = '';
+        if (hasAb) {
+          var g = groups.get(nb + '␟' + hs);
+          if (g) { style = ' style="--well-color:' + g.color + '"'; cls += ' has-antibody'; }
+        }
+        if (complete) cls += ' complete';
+        else if (hasAb || bc) cls += ' partial';
+        if (selection.has(key)) cls += ' selected';
+        var label = hasAb ? esc((nb || '?') + ' / ' + (hs || '?')) : '';
+        var barcodeText = bc ? esc(bc) : '';
+        var titleParts = [key];
+        if (bc) titleParts.push('barcode: ' + bc);
+        if (hasAb) titleParts.push((nb || '?') + ' / ' + (hs || '?'));
+        html += '<div class="' + cls + '" data-key="' + key + '"' + style + ' title="' + esc(titleParts.join(' · ')) + '">' +
+          '<span class="well-coord">' + key + '</span>' +
+          (label ? '<span class="well-label">' + label + '</span>' : '') +
+          (barcodeText ? '<span class="well-barcode">' + barcodeText + '</span>' : '') +
+          '</div>';
+      });
+    });
+    gridEl.innerHTML = html;
+  }
+
+  function applySelectionClasses() {
+    var wells = gridEl.querySelectorAll('.well');
+    wells.forEach(function (el) {
+      el.classList.toggle('selected', selection.has(el.dataset.key));
+    });
+  }
+
+  function renderLegend() {
+    var groups = collectGroups();
+    if (groups.size === 0) { legendEl.innerHTML = '<p class="legend-empty">还没有配对任何抗体信息</p>'; return; }
+    var html = '';
+    groups.forEach(function (g) {
+      html += '<div class="legend-item"><span class="swatch" style="--well-color:' + g.color + '"></span><span>' + esc(g.label) + '</span><span class="legend-count">' + g.count + ' 孔</span></div>';
+    });
+    legendEl.innerHTML = html;
+  }
+
+  function fieldRow(field, label, common) {
+    var placeholder = common === undefined ? '(多个不同值)' : (common === '' ? '(空)' : common);
+    return '<div class="field-row">' +
+      '<label>' + esc(label) + '</label>' +
+      '<div class="field-controls">' +
+      '<input type="text" id="input-' + field + '" placeholder="' + esc(placeholder) + '" />' +
+      '<button type="button" class="btn-mini" data-action="apply-field" data-field="' + field + '">应用</button>' +
+      '<button type="button" class="btn-mini btn-mini-ghost" data-action="clear-field" data-field="' + field + '">清空</button>' +
+      '</div></div>';
+  }
+
+  function renderSidePanel() {
+    var n = selection.size;
+    var html = '';
+    if (n === 0) {
+      html += '<p class="panel-hint">在左侧网格里点击、拖拽框选，或点击行号/列号表头，选中一个或多个孔位后即可在这里批量填写。</p>';
+    } else {
+      html += '<div class="panel-section">' +
+        '<div class="panel-section-title">已选中 ' + n + ' 个孔</div>' +
+        fieldRow('barcode', 'Tn5 modality barcode', commonValue('barcode')) +
+        fieldRow('nanobody', 'nanobody_Tn5', commonValue('nanobody')) +
+        fieldRow('histone', 'Histone_marker', commonValue('histone')) +
+        (n === 1 ? fieldRow('wellName', 'Well_name 覆盖（留空=自动生成）', commonValue('wellName'))
+                 : '<p class="panel-note">选中多个孔时 Well_name 保持各自自动生成；只选中一个孔才能单独覆盖它的名字。</p>') +
+        '</div>';
+    }
+    var order = state.order;
+    var optKeys = orderedKeys(order);
+    var startDefault = optKeys[0];
+    if (n > 0) {
+      var bestIdx = Infinity;
+      selection.forEach(function (k) { var idx = optKeys.indexOf(k); if (idx < bestIdx) { bestIdx = idx; startDefault = k; } });
+    }
+    html += '<div class="panel-section paste-section">' +
+      '<div class="panel-section-title">从Excel粘贴整列</div>' +
+      '<label class="settings-field"><span>目标字段</span><select id="pasteTarget">' +
+      '<option value="barcode">Tn5 modality barcode</option>' +
+      '<option value="nanobody">nanobody_Tn5</option>' +
+      '<option value="histone">Histone_marker</option>' +
+      '<option value="wellName">Well_name（覆盖自动生成）</option>' +
+      '</select></label>' +
+      '<label class="settings-field"><span>起始孔</span><select id="pasteStart">' +
+      optKeys.map(function (k) { return '<option value="' + k + '"' + (k === startDefault ? ' selected' : '') + '>' + k + '</option>'; }).join('') +
+      '</select></label>' +
+      '<textarea id="pasteText" rows="5" placeholder="从Excel复制一整列数据后粘贴到这里，每行一个值，会按当前编号顺序从起始孔开始依次填入"></textarea>' +
+      '<button type="button" class="btn-secondary" data-action="paste-fill">粘贴并按顺序填充</button>' +
+      '</div>';
+    sidePanelEl.innerHTML = html;
+  }
+
+  function renderStatusline() {
+    var complete = 0, barcodeOnly = 0, abOnly = 0, empty = 0, total = 0;
+    state.plates.forEach(function (plate) {
+      ROWS.forEach(function (r) {
+        COLS.forEach(function (c) {
+          total++;
+          var w = plate.wells[r + c];
+          var bc = w.barcode.trim(), nb = w.nanobody.trim(), hs = w.histone.trim();
+          if (bc && nb && hs) complete++;
+          else if (bc && !(nb && hs)) barcodeOnly++;
+          else if ((nb || hs) && !bc) abOnly++;
+          else if (!bc && !nb && !hs) empty++;
+        });
+      });
+    });
+    statuslineEl.textContent = '共 ' + total + ' 个孔位（4×96）· 已完整配对 ' + complete + ' 个 · 仅有barcode待配对抗体 ' + barcodeOnly +
+      ' 个 · 仅有抗体信息缺barcode ' + abOnly + ' 个 · 未填写 ' + empty + ' 个 · 已自动保存到本机浏览器';
+  }
+
+  function render() {
+    save();
+    renderTabs();
+    renderSettings();
+    renderGrid();
+    renderLegend();
+    renderSidePanel();
+    renderStatusline();
+  }
+
+  function fullRenderDataOnly() {
+    save();
+    renderGrid();
+    renderLegend();
+    renderStatusline();
+  }
+
+  // ---------- mutation actions ----------
+  function applyFieldToSelection(field, value) {
+    if (selection.size === 0) { showToast('请先选择孔位', 'warn'); return; }
+    var plate = getActivePlate();
+    selection.forEach(function (key) { plate.wells[key][field] = value; });
+    fullRenderDataOnly();
+    showToast('已应用到 ' + selection.size + ' 个孔', 'ok');
+  }
+
+  function handlePasteFill() {
+    var targetEl = document.getElementById('pasteTarget');
+    var startEl = document.getElementById('pasteStart');
+    var textEl = document.getElementById('pasteText');
+    if (!targetEl || !startEl || !textEl) return;
+    var target = targetEl.value;
+    var startKey = startEl.value;
+    var lines = textEl.value.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+    if (lines.length === 0) { showToast('粘贴框是空的', 'warn'); return; }
+    var ordered = orderedKeys(state.order);
+    var startIdx = ordered.indexOf(startKey);
+    if (startIdx < 0) startIdx = 0;
+    var plate = getActivePlate();
+    var filled = 0, skipped = 0;
+    for (var i = 0; i < lines.length; i++) {
+      var pos = startIdx + i;
+      if (pos >= 96) { skipped = lines.length - i; break; }
+      plate.wells[ordered[pos]][target] = lines[i];
+      filled++;
+    }
+    textEl.value = '';
+    fullRenderDataOnly();
+    var orderLabel = state.order === 'col' ? '先列后行' : '先行后列';
+    showToast('已按' + orderLabel + '顺序填充 ' + filled + ' 个孔' + (skipped ? '，超出板范围忽略了 ' + skipped + ' 行' : ''), 'ok');
+  }
+
+  function clearPlate(plateId) {
+    var plate = getActivePlate();
+    if (plate.id !== plateId) return;
+    ROWS.forEach(function (r) { COLS.forEach(function (c) { plate.wells[r + c] = emptyWell(); }); });
+    render();
+    showToast('已清空 Plate ' + plateId, 'ok');
+  }
+
+  function clearAll() {
+    state.plates = [1, 2, 3, 4].map(makePlate);
+    selection = new Set();
+    render();
+    showToast('已清空全部 4 块板', 'ok');
+  }
+
+  async function getCapability(name) {
+    try {
+      if (!window.claude || typeof window.claude.use !== 'function') return null;
+      return await window.claude.use(name);
+    } catch (e) { return null; }
+  }
+
+  async function handleExport() {
+    if (typeof XLSX === 'undefined') { showToast('导出组件加载失败，请刷新页面重试', 'warn'); return; }
+    var rows = [];
+    var incomplete = 0;
+    state.plates.forEach(function (plate) {
+      ROWS.forEach(function (r, ri) {
+        COLS.forEach(function (c, ci) {
+          var key = r + c;
+          var w = plate.wells[key];
+          var bc = w.barcode.trim(), nb = w.nanobody.trim(), hs = w.histone.trim();
+          if (bc && nb && hs) {
+            rows.push([bc, computedWellName(plate, ri, ci), nb, hs]);
+          } else if (bc || nb || hs) {
+            incomplete++;
+          }
+        });
+      });
+    });
+    if (rows.length === 0) {
+      showToast('没有已填写完整（barcode + well name + nanobody + histone marker 都非空）的孔，无法导出', 'warn');
+      return;
+    }
+    var wsData = [['Tn5_modality_barcode', 'Well_name', 'nanobody_Tn5', 'Histone_marker']].concat(rows);
+    var ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{ wch: 22 }, { wch: 26 }, { wch: 22 }, { wch: 18 }];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'antibody_map');
+    var out = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+    var summary = '已导出 ' + rows.length + ' 行' + (incomplete ? '，另有 ' + incomplete + ' 个孔信息不完整未包含' : '');
+
+    var downloads = await getCapability('downloads');
+    if (downloads) {
+      try {
+        await downloads.save({ filename: 'antibody_map.xlsx', data: new Uint8Array(out) });
+        showToast(summary, 'ok');
+      } catch (err) {
+        var code = err && err.code;
+        if (code === 'declined') showToast('已取消下载', 'ok');
+        else if (code === 'rate_limited') showToast('请求太频繁，请稍后再试', 'warn');
+        else showToast('下载失败：' + ((err && err.message) || code || '未知错误'), 'warn');
+      }
+      return;
+    }
+
+    // 不在claude.ai的Artifact环境里运行时(比如把这个html文件下载下来直接
+    // 双击打开、或者放到自己的电脑/服务器上用)，走浏览器原生下载：用Blob+
+    // 临时<a download>触发，这是普通网页里最标准的做法，和上面的downloads
+    // 能力互为备份，两条路径至少有一条能用。
+    try {
+      var blob = new Blob([out], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'antibody_map.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      showToast(summary, 'ok');
+    } catch (err) {
+      showToast('下载失败：' + ((err && err.message) || '未知错误'), 'warn');
+    }
+  }
+
+  function wireConfirmButton(btn, action) {
+    var armed = false, timer = null;
+    var original = btn.textContent;
+    btn.addEventListener('click', function () {
+      if (!armed) {
+        armed = true;
+        btn.textContent = '再次点击确认';
+        btn.classList.add('btn-danger-armed');
+        timer = setTimeout(function () { armed = false; btn.textContent = original; btn.classList.remove('btn-danger-armed'); }, 4000);
+      } else {
+        clearTimeout(timer);
+        armed = false;
+        btn.textContent = original;
+        btn.classList.remove('btn-danger-armed');
+        action();
+      }
+    });
+  }
+
+  // ---------- event wiring (all delegated, attached once) ----------
+  function init() {
+    var loaded = load();
+    if (loaded) restoreFromLoaded(loaded);
+
+    document.getElementById('orderSelect').value = state.order;
+    document.getElementById('orderSelect').addEventListener('change', function (e) {
+      state.order = e.target.value === 'col' ? 'col' : 'row';
+      render();
+    });
+
+    wireConfirmButton(document.getElementById('btnClearPlate'), function () { clearPlate(state.activePlate); });
+    wireConfirmButton(document.getElementById('btnClearAll'), clearAll);
+    document.getElementById('btnExport').addEventListener('click', handleExport);
+
+    tabsEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('.plate-tab');
+      if (!btn) return;
+      state.activePlate = parseInt(btn.dataset.plate, 10);
+      selection = new Set();
+      render();
+    });
+
+    settingsEl.addEventListener('change', function (e) {
+      if (e.target && e.target.id === 'prefixInput') {
+        getActivePlate().prefix = e.target.value.trim() || 'iTn5_N5_5base';
+        render();
+      }
+    });
+
+    gridEl.addEventListener('mousedown', function (e) {
+      var cell = e.target.closest('.well');
+      if (!cell) return;
+      var key = cell.dataset.key;
+      var immediate = false;
+      if (e.ctrlKey || e.metaKey) {
+        if (selection.has(key)) selection.delete(key); else selection.add(key);
+        lastAnchor = key;
+        immediate = true;
+      } else if (e.shiftKey && lastAnchor) {
+        selection = rectSelection(lastAnchor, key);
+        immediate = true;
+      } else {
+        lastAnchor = key;
+        selection = new Set([key]);
+        isDragging = true;
+      }
+      applySelectionClasses();
+      if (immediate) { renderSidePanel(); renderStatusline(); }
+      e.preventDefault();
+    });
+
+    gridEl.addEventListener('mouseover', function (e) {
+      if (!isDragging) return;
+      var cell = e.target.closest('.well');
+      if (!cell) return;
+      selection = rectSelection(lastAnchor, cell.dataset.key);
+      applySelectionClasses();
+    });
+
+    document.addEventListener('mouseup', function () {
+      if (isDragging) { isDragging = false; renderSidePanel(); renderStatusline(); }
+    });
+
+    gridEl.addEventListener('click', function (e) {
+      var additive;
+      var rowHead = e.target.closest('.row-head');
+      if (rowHead) {
+        var r = rowHead.dataset.row;
+        var rowKeys = COLS.map(function (c) { return r + c; });
+        additive = e.ctrlKey || e.metaKey || e.shiftKey;
+        if (additive) rowKeys.forEach(function (k) { selection.add(k); }); else selection = new Set(rowKeys);
+        applySelectionClasses(); renderSidePanel(); renderStatusline();
+        return;
+      }
+      var colHead = e.target.closest('.col-head');
+      if (colHead) {
+        var c = colHead.dataset.col;
+        var colKeys = ROWS.map(function (rr) { return rr + c; });
+        additive = e.ctrlKey || e.metaKey || e.shiftKey;
+        if (additive) colKeys.forEach(function (k) { selection.add(k); }); else selection = new Set(colKeys);
+        applySelectionClasses(); renderSidePanel(); renderStatusline();
+        return;
+      }
+    });
+
+    sidePanelEl.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      var action = btn.dataset.action;
+      if (action === 'apply-field' || action === 'clear-field') {
+        var field = btn.dataset.field;
+        var value = action === 'clear-field' ? '' : (document.getElementById('input-' + field) ? document.getElementById('input-' + field).value : '');
+        applyFieldToSelection(field, value);
+      } else if (action === 'paste-fill') {
+        handlePasteFill();
+      }
+    });
+
+    render();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+
+</body>
+</html>
